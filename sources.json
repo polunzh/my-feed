@@ -1,11 +1,14 @@
 [
   {
-    "Link": "https://jysperm.me/atom.xml"
+    "Link": "https://jysperm.me/atom.xml",
+    "LastItemLink": "https://jysperm.me/2021/01/macbook-air-apple-silicon/"
   },
   {
-    "Link": "https://xargin.com/rss"
+    "Link": "https://xargin.com/rss",
+    "LastItemLink": "https://xargin.com/notes-on-logic-writing/"
   },
   {
-    "Link": "https://www.luozhiyun.com/feed"
+    "Link": "https://www.luozhiyun.com/feed",
+    "LastItemLink": "https://www.luozhiyun.com/archives/523"
   }
 ]
