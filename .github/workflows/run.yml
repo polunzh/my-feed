@@ -1,0 +1,41 @@
+name: Run
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron:  '50 5,17 * * *'
+
+jobs:
+
+  read:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: master
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Check subsubscribe
+      run: ./my-feed
+      env:
+        EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        GIST_SOURCE_FILE: ${{ secrets.GIST_SOURCE_FILE }}
+
+    - name: Sync to Gist
+      uses: exuanbo/actions-deploy-gist@v1
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: ${{ secrets.GIST_ID }}
+        gist_file_name: my-feed.json
+        file_path: ./sources.json

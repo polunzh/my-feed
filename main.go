@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -105,7 +107,10 @@ func checkUpdates(sources *[]source) ([]byte, error) {
 			updatedArticle := article{Title: tempItem.Title, Link: link, Updated: formatTimeString(tempItem.Updated)}
 			updatedBlog.Articles = append(updatedBlog.Articles, updatedArticle)
 		}
-		blogs = append(blogs, updatedBlog)
+
+		if len(updatedBlog.Articles) > 0 {
+			blogs = append(blogs, updatedBlog)
+		}
 	}
 
 	if len(blogs) == 0 {
@@ -153,7 +158,7 @@ func sendToEmail(blogs *[]blog) {
 
 	email := mail.NewMSG()
 	email.SetFrom("博客订阅 <965076377@163.com>").
-		AddTo(os.Getenv("TO")).
+		AddTo(os.Getenv("EMAIL_TO")).
 		SetSubject("最近更新")
 
 	email.SetBody(mail.TextHTML, html.String())
@@ -167,11 +172,32 @@ func readDB(dbFile string) map[string]string {
 	return db
 }
 
+func downloadFromGist(url string, targetFile string) string {
+	exists, _ := fileExists(targetFile)
+
+	if exists == true {
+		err := os.Remove(targetFile)
+		checkError(err)
+	}
+
+	out, err := os.Create(targetFile)
+	checkError(err)
+	defer out.Close()
+
+	resp, err := http.Get(url)
+	checkError(err)
+	defer resp.Body.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return targetFile
+}
+
 func main() {
 	cwd, err := os.Getwd()
 	checkError(err)
 
 	sourcesPath := filepath.Join(cwd, "sources.json")
+	downloadFromGist(os.Getenv("GIST_SOURCE_FILE"), sourcesPath)
 
 	_, err = fileExists(sourcesPath)
 	checkError(err)
