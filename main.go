@@ -105,7 +105,10 @@ func checkUpdates(sources *[]source) ([]byte, error) {
 			updatedArticle := article{Title: tempItem.Title, Link: link, Updated: formatTimeString(tempItem.Updated)}
 			updatedBlog.Articles = append(updatedBlog.Articles, updatedArticle)
 		}
-		blogs = append(blogs, updatedBlog)
+
+		if len(updatedBlog.Articles) > 0 {
+			blogs = append(blogs, updatedBlog)
+		}
 	}
 
 	if len(blogs) == 0 {
