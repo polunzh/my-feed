@@ -1,0 +1,14 @@
+<h1>最近更新</h1>
+{{range .Blogs}}
+<h2><a href="{{.Link}}">{{.Title}}</a></h2>
+<p>{{.Description}}</p>
+<p>最近更新: {{.Updated}}</p>
+<h3>文章列表</h3>
+<div>
+<ul>
+  {{range .Articles}}
+  <li><a href="{{.Link}}">{{.Title}}</a> {{.Updated}}</li>
+  {{end}}
+</ul>
+</div>
+{{end}}
