@@ -156,7 +156,7 @@ func sendToEmail(blogs *[]blog) {
 
 	email := mail.NewMSG()
 	email.SetFrom("博客订阅 <965076377@163.com>").
-		AddTo(os.Getenv("TO")).
+		AddTo(os.Getenv("EMAIL_TO")).
 		SetSubject("最近更新")
 
 	email.SetBody(mail.TextHTML, html.String())
