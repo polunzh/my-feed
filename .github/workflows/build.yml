@@ -18,10 +18,3 @@ jobs:
 
     - name: Build
       run: go build -v ./...
-
-    - name: Check subsubscribe
-      run: ./my-feed
-      env:
-        EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        EMAIL_TO: polunzh@qq.com
