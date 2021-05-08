@@ -100,6 +100,7 @@ func checkUpdates(sources *[]source) ([]byte, error) {
 
 		for _, tempItem := range feed.Items {
 			link := strings.Trim(tempItem.Link, "")
+
 			if lastItemLink == link {
 				break
 			}
