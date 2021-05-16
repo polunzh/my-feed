@@ -185,7 +185,7 @@ func downloadFromGist(url string, targetFile string) string {
 	checkError(err)
 	defer out.Close()
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(url + "?time=" + time.Now().Format("20060102150405"))
 	checkError(err)
 	defer resp.Body.Close()
 
