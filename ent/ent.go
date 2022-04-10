@@ -5,8 +5,8 @@ package ent
 import (
 	"errors"
 	"fmt"
+	"polunzh/my-feed/ent/feed"
 	"polunzh/my-feed/ent/group"
-	"polunzh/my-feed/ent/subscription"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -30,8 +30,8 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		group.Table:        group.ValidColumn,
-		subscription.Table: subscription.ValidColumn,
+		feed.Table:  feed.ValidColumn,
+		group.Table: group.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

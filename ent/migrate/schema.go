@@ -8,13 +8,27 @@ import (
 )
 
 var (
+	// FeedsColumns holds the columns for the "feeds" table.
+	FeedsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Default: ""},
+		{Name: "url", Type: field.TypeString, Unique: true},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// FeedsTable holds the schema information for the "feeds" table.
+	FeedsTable = &schema.Table{
+		Name:       "feeds",
+		Columns:    FeedsColumns,
+		PrimaryKey: []*schema.Column{FeedsColumns[0]},
+	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "subscription_group", Type: field.TypeInt, Nullable: true},
+		{Name: "feed_group", Type: field.TypeInt, Nullable: true},
 	}
 	// GroupsTable holds the schema information for the "groups" table.
 	GroupsTable = &schema.Table{
@@ -23,34 +37,20 @@ var (
 		PrimaryKey: []*schema.Column{GroupsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "groups_subscriptions_group",
+				Symbol:     "groups_feeds_group",
 				Columns:    []*schema.Column{GroupsColumns[4]},
-				RefColumns: []*schema.Column{SubscriptionsColumns[0]},
+				RefColumns: []*schema.Column{FeedsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 	}
-	// SubscriptionsColumns holds the columns for the "subscriptions" table.
-	SubscriptionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString, Default: ""},
-		{Name: "url", Type: field.TypeString, Unique: true},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "created_at", Type: field.TypeTime},
-	}
-	// SubscriptionsTable holds the schema information for the "subscriptions" table.
-	SubscriptionsTable = &schema.Table{
-		Name:       "subscriptions",
-		Columns:    SubscriptionsColumns,
-		PrimaryKey: []*schema.Column{SubscriptionsColumns[0]},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		FeedsTable,
 		GroupsTable,
-		SubscriptionsTable,
 	}
 )
 
 func init() {
-	GroupsTable.ForeignKeys[0].RefTable = SubscriptionsTable
+	GroupsTable.ForeignKeys[0].RefTable = FeedsTable
 }

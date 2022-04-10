@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type Subscription struct {
+type Feed struct {
 	ID        int
 	Name      string `json:"name" binding:"required"`
 	URL       string `json:"url" binding:"required"`
@@ -13,8 +13,8 @@ type Subscription struct {
 	UpdatedAt time.Time
 }
 
-func ToModel(data *ent.Subscription) *Subscription {
-	return &Subscription{
+func ToModel(data *ent.Feed) *Feed {
+	return &Feed{
 		ID:        data.ID,
 		Name:      data.Name,
 		URL:       data.URL,

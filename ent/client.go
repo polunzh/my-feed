@@ -9,8 +9,8 @@ import (
 
 	"polunzh/my-feed/ent/migrate"
 
+	"polunzh/my-feed/ent/feed"
 	"polunzh/my-feed/ent/group"
-	"polunzh/my-feed/ent/subscription"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -22,10 +22,10 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Feed is the client for interacting with the Feed builders.
+	Feed *FeedClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
-	// Subscription is the client for interacting with the Subscription builders.
-	Subscription *SubscriptionClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -39,8 +39,8 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Feed = NewFeedClient(c.config)
 	c.Group = NewGroupClient(c.config)
-	c.Subscription = NewSubscriptionClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -72,10 +72,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		Group:        NewGroupClient(cfg),
-		Subscription: NewSubscriptionClient(cfg),
+		ctx:    ctx,
+		config: cfg,
+		Feed:   NewFeedClient(cfg),
+		Group:  NewGroupClient(cfg),
 	}, nil
 }
 
@@ -93,17 +93,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		Group:        NewGroupClient(cfg),
-		Subscription: NewSubscriptionClient(cfg),
+		ctx:    ctx,
+		config: cfg,
+		Feed:   NewFeedClient(cfg),
+		Group:  NewGroupClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Group.
+//		Feed.
 //		Query().
 //		Count(ctx)
 //
@@ -126,8 +126,114 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Feed.Use(hooks...)
 	c.Group.Use(hooks...)
-	c.Subscription.Use(hooks...)
+}
+
+// FeedClient is a client for the Feed schema.
+type FeedClient struct {
+	config
+}
+
+// NewFeedClient returns a client for the Feed from the given config.
+func NewFeedClient(c config) *FeedClient {
+	return &FeedClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `feed.Hooks(f(g(h())))`.
+func (c *FeedClient) Use(hooks ...Hook) {
+	c.hooks.Feed = append(c.hooks.Feed, hooks...)
+}
+
+// Create returns a create builder for Feed.
+func (c *FeedClient) Create() *FeedCreate {
+	mutation := newFeedMutation(c.config, OpCreate)
+	return &FeedCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Feed entities.
+func (c *FeedClient) CreateBulk(builders ...*FeedCreate) *FeedCreateBulk {
+	return &FeedCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Feed.
+func (c *FeedClient) Update() *FeedUpdate {
+	mutation := newFeedMutation(c.config, OpUpdate)
+	return &FeedUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *FeedClient) UpdateOne(f *Feed) *FeedUpdateOne {
+	mutation := newFeedMutation(c.config, OpUpdateOne, withFeed(f))
+	return &FeedUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *FeedClient) UpdateOneID(id int) *FeedUpdateOne {
+	mutation := newFeedMutation(c.config, OpUpdateOne, withFeedID(id))
+	return &FeedUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Feed.
+func (c *FeedClient) Delete() *FeedDelete {
+	mutation := newFeedMutation(c.config, OpDelete)
+	return &FeedDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *FeedClient) DeleteOne(f *Feed) *FeedDeleteOne {
+	return c.DeleteOneID(f.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *FeedClient) DeleteOneID(id int) *FeedDeleteOne {
+	builder := c.Delete().Where(feed.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &FeedDeleteOne{builder}
+}
+
+// Query returns a query builder for Feed.
+func (c *FeedClient) Query() *FeedQuery {
+	return &FeedQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Feed entity by its id.
+func (c *FeedClient) Get(ctx context.Context, id int) (*Feed, error) {
+	return c.Query().Where(feed.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *FeedClient) GetX(ctx context.Context, id int) *Feed {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryGroup queries the group edge of a Feed.
+func (c *FeedClient) QueryGroup(f *Feed) *GroupQuery {
+	query := &GroupQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := f.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(feed.Table, feed.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, feed.GroupTable, feed.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *FeedClient) Hooks() []Hook {
+	return c.hooks.Feed
 }
 
 // GroupClient is a client for the Group schema.
@@ -218,110 +324,4 @@ func (c *GroupClient) GetX(ctx context.Context, id int) *Group {
 // Hooks returns the client hooks.
 func (c *GroupClient) Hooks() []Hook {
 	return c.hooks.Group
-}
-
-// SubscriptionClient is a client for the Subscription schema.
-type SubscriptionClient struct {
-	config
-}
-
-// NewSubscriptionClient returns a client for the Subscription from the given config.
-func NewSubscriptionClient(c config) *SubscriptionClient {
-	return &SubscriptionClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `subscription.Hooks(f(g(h())))`.
-func (c *SubscriptionClient) Use(hooks ...Hook) {
-	c.hooks.Subscription = append(c.hooks.Subscription, hooks...)
-}
-
-// Create returns a create builder for Subscription.
-func (c *SubscriptionClient) Create() *SubscriptionCreate {
-	mutation := newSubscriptionMutation(c.config, OpCreate)
-	return &SubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Subscription entities.
-func (c *SubscriptionClient) CreateBulk(builders ...*SubscriptionCreate) *SubscriptionCreateBulk {
-	return &SubscriptionCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Subscription.
-func (c *SubscriptionClient) Update() *SubscriptionUpdate {
-	mutation := newSubscriptionMutation(c.config, OpUpdate)
-	return &SubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *SubscriptionClient) UpdateOne(s *Subscription) *SubscriptionUpdateOne {
-	mutation := newSubscriptionMutation(c.config, OpUpdateOne, withSubscription(s))
-	return &SubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *SubscriptionClient) UpdateOneID(id int) *SubscriptionUpdateOne {
-	mutation := newSubscriptionMutation(c.config, OpUpdateOne, withSubscriptionID(id))
-	return &SubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Subscription.
-func (c *SubscriptionClient) Delete() *SubscriptionDelete {
-	mutation := newSubscriptionMutation(c.config, OpDelete)
-	return &SubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a delete builder for the given entity.
-func (c *SubscriptionClient) DeleteOne(s *Subscription) *SubscriptionDeleteOne {
-	return c.DeleteOneID(s.ID)
-}
-
-// DeleteOneID returns a delete builder for the given id.
-func (c *SubscriptionClient) DeleteOneID(id int) *SubscriptionDeleteOne {
-	builder := c.Delete().Where(subscription.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &SubscriptionDeleteOne{builder}
-}
-
-// Query returns a query builder for Subscription.
-func (c *SubscriptionClient) Query() *SubscriptionQuery {
-	return &SubscriptionQuery{
-		config: c.config,
-	}
-}
-
-// Get returns a Subscription entity by its id.
-func (c *SubscriptionClient) Get(ctx context.Context, id int) (*Subscription, error) {
-	return c.Query().Where(subscription.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *SubscriptionClient) GetX(ctx context.Context, id int) *Subscription {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryGroup queries the group edge of a Subscription.
-func (c *SubscriptionClient) QueryGroup(s *Subscription) *GroupQuery {
-	query := &GroupQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := s.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(subscription.Table, subscription.FieldID, id),
-			sqlgraph.To(group.Table, group.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, subscription.GroupTable, subscription.GroupColumn),
-		)
-		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *SubscriptionClient) Hooks() []Hook {
-	return c.hooks.Subscription
 }

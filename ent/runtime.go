@@ -3,9 +3,9 @@
 package ent
 
 import (
+	"polunzh/my-feed/ent/feed"
 	"polunzh/my-feed/ent/group"
 	"polunzh/my-feed/ent/schema"
-	"polunzh/my-feed/ent/subscription"
 	"time"
 )
 
@@ -13,6 +13,24 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	feedFields := schema.Feed{}.Fields()
+	_ = feedFields
+	// feedDescName is the schema descriptor for name field.
+	feedDescName := feedFields[0].Descriptor()
+	// feed.DefaultName holds the default value on creation for the name field.
+	feed.DefaultName = feedDescName.Default.(string)
+	// feedDescURL is the schema descriptor for url field.
+	feedDescURL := feedFields[1].Descriptor()
+	// feed.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	feed.URLValidator = feedDescURL.Validators[0].(func(string) error)
+	// feedDescUpdatedAt is the schema descriptor for updated_at field.
+	feedDescUpdatedAt := feedFields[2].Descriptor()
+	// feed.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	feed.DefaultUpdatedAt = feedDescUpdatedAt.Default.(time.Time)
+	// feedDescCreatedAt is the schema descriptor for created_at field.
+	feedDescCreatedAt := feedFields[3].Descriptor()
+	// feed.DefaultCreatedAt holds the default value on creation for the created_at field.
+	feed.DefaultCreatedAt = feedDescCreatedAt.Default.(time.Time)
 	groupFields := schema.Group{}.Fields()
 	_ = groupFields
 	// groupDescName is the schema descriptor for name field.
@@ -27,22 +45,4 @@ func init() {
 	groupDescCreatedAt := groupFields[2].Descriptor()
 	// group.DefaultCreatedAt holds the default value on creation for the created_at field.
 	group.DefaultCreatedAt = groupDescCreatedAt.Default.(time.Time)
-	subscriptionFields := schema.Subscription{}.Fields()
-	_ = subscriptionFields
-	// subscriptionDescName is the schema descriptor for name field.
-	subscriptionDescName := subscriptionFields[0].Descriptor()
-	// subscription.DefaultName holds the default value on creation for the name field.
-	subscription.DefaultName = subscriptionDescName.Default.(string)
-	// subscriptionDescURL is the schema descriptor for url field.
-	subscriptionDescURL := subscriptionFields[1].Descriptor()
-	// subscription.URLValidator is a validator for the "url" field. It is called by the builders before save.
-	subscription.URLValidator = subscriptionDescURL.Validators[0].(func(string) error)
-	// subscriptionDescUpdatedAt is the schema descriptor for updated_at field.
-	subscriptionDescUpdatedAt := subscriptionFields[2].Descriptor()
-	// subscription.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	subscription.DefaultUpdatedAt = subscriptionDescUpdatedAt.Default.(time.Time)
-	// subscriptionDescCreatedAt is the schema descriptor for created_at field.
-	subscriptionDescCreatedAt := subscriptionFields[3].Descriptor()
-	// subscription.DefaultCreatedAt holds the default value on creation for the created_at field.
-	subscription.DefaultCreatedAt = subscriptionDescCreatedAt.Default.(time.Time)
 }

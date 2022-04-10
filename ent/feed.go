@@ -4,15 +4,15 @@ package ent
 
 import (
 	"fmt"
-	"polunzh/my-feed/ent/subscription"
+	"polunzh/my-feed/ent/feed"
 	"strings"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 )
 
-// Subscription is the model entity for the Subscription schema.
-type Subscription struct {
+// Feed is the model entity for the Feed schema.
+type Feed struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
@@ -25,12 +25,12 @@ type Subscription struct {
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the SubscriptionQuery when eager-loading is set.
-	Edges SubscriptionEdges `json:"edges"`
+	// The values are being populated by the FeedQuery when eager-loading is set.
+	Edges FeedEdges `json:"edges"`
 }
 
-// SubscriptionEdges holds the relations/edges for other nodes in the graph.
-type SubscriptionEdges struct {
+// FeedEdges holds the relations/edges for other nodes in the graph.
+type FeedEdges struct {
 	// Group holds the value of the group edge.
 	Group []*Group `json:"group,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -40,7 +40,7 @@ type SubscriptionEdges struct {
 
 // GroupOrErr returns the Group value or an error if the edge
 // was not loaded in eager-loading.
-func (e SubscriptionEdges) GroupOrErr() ([]*Group, error) {
+func (e FeedEdges) GroupOrErr() ([]*Group, error) {
 	if e.loadedTypes[0] {
 		return e.Group, nil
 	}
@@ -48,111 +48,111 @@ func (e SubscriptionEdges) GroupOrErr() ([]*Group, error) {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Subscription) scanValues(columns []string) ([]interface{}, error) {
+func (*Feed) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case subscription.FieldID:
+		case feed.FieldID:
 			values[i] = new(sql.NullInt64)
-		case subscription.FieldName, subscription.FieldURL:
+		case feed.FieldName, feed.FieldURL:
 			values[i] = new(sql.NullString)
-		case subscription.FieldUpdatedAt, subscription.FieldCreatedAt:
+		case feed.FieldUpdatedAt, feed.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Subscription", columns[i])
+			return nil, fmt.Errorf("unexpected column %q for type Feed", columns[i])
 		}
 	}
 	return values, nil
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Subscription fields.
-func (s *Subscription) assignValues(columns []string, values []interface{}) error {
+// to the Feed fields.
+func (f *Feed) assignValues(columns []string, values []interface{}) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case subscription.FieldID:
+		case feed.FieldID:
 			value, ok := values[i].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			s.ID = int(value.Int64)
-		case subscription.FieldName:
+			f.ID = int(value.Int64)
+		case feed.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				s.Name = value.String
+				f.Name = value.String
 			}
-		case subscription.FieldURL:
+		case feed.FieldURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field url", values[i])
 			} else if value.Valid {
-				s.URL = value.String
+				f.URL = value.String
 			}
-		case subscription.FieldUpdatedAt:
+		case feed.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				s.UpdatedAt = value.Time
+				f.UpdatedAt = value.Time
 			}
-		case subscription.FieldCreatedAt:
+		case feed.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				s.CreatedAt = value.Time
+				f.CreatedAt = value.Time
 			}
 		}
 	}
 	return nil
 }
 
-// QueryGroup queries the "group" edge of the Subscription entity.
-func (s *Subscription) QueryGroup() *GroupQuery {
-	return (&SubscriptionClient{config: s.config}).QueryGroup(s)
+// QueryGroup queries the "group" edge of the Feed entity.
+func (f *Feed) QueryGroup() *GroupQuery {
+	return (&FeedClient{config: f.config}).QueryGroup(f)
 }
 
-// Update returns a builder for updating this Subscription.
-// Note that you need to call Subscription.Unwrap() before calling this method if this Subscription
+// Update returns a builder for updating this Feed.
+// Note that you need to call Feed.Unwrap() before calling this method if this Feed
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (s *Subscription) Update() *SubscriptionUpdateOne {
-	return (&SubscriptionClient{config: s.config}).UpdateOne(s)
+func (f *Feed) Update() *FeedUpdateOne {
+	return (&FeedClient{config: f.config}).UpdateOne(f)
 }
 
-// Unwrap unwraps the Subscription entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the Feed entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (s *Subscription) Unwrap() *Subscription {
-	tx, ok := s.config.driver.(*txDriver)
+func (f *Feed) Unwrap() *Feed {
+	tx, ok := f.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Subscription is not a transactional entity")
+		panic("ent: Feed is not a transactional entity")
 	}
-	s.config.driver = tx.drv
-	return s
+	f.config.driver = tx.drv
+	return f
 }
 
 // String implements the fmt.Stringer.
-func (s *Subscription) String() string {
+func (f *Feed) String() string {
 	var builder strings.Builder
-	builder.WriteString("Subscription(")
-	builder.WriteString(fmt.Sprintf("id=%v", s.ID))
+	builder.WriteString("Feed(")
+	builder.WriteString(fmt.Sprintf("id=%v", f.ID))
 	builder.WriteString(", name=")
-	builder.WriteString(s.Name)
+	builder.WriteString(f.Name)
 	builder.WriteString(", url=")
-	builder.WriteString(s.URL)
+	builder.WriteString(f.URL)
 	builder.WriteString(", updated_at=")
-	builder.WriteString(s.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(f.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", created_at=")
-	builder.WriteString(s.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(f.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }
 
-// Subscriptions is a parsable slice of Subscription.
-type Subscriptions []*Subscription
+// Feeds is a parsable slice of Feed.
+type Feeds []*Feed
 
-func (s Subscriptions) config(cfg config) {
-	for _i := range s {
-		s[_i].config = cfg
+func (f Feeds) config(cfg config) {
+	for _i := range f {
+		f[_i].config = cfg
 	}
 }

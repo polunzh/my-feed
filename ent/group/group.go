@@ -32,7 +32,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "groups"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"subscription_group",
+	"feed_group",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

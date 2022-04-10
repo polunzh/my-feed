@@ -21,8 +21,8 @@ type Group struct {
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt          time.Time `json:"created_at,omitempty"`
-	subscription_group *int
+	CreatedAt  time.Time `json:"created_at,omitempty"`
+	feed_group *int
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -36,7 +36,7 @@ func (*Group) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case group.FieldUpdatedAt, group.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case group.ForeignKeys[0]: // subscription_group
+		case group.ForeignKeys[0]: // feed_group
 			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Group", columns[i])
@@ -79,10 +79,10 @@ func (gr *Group) assignValues(columns []string, values []interface{}) error {
 			}
 		case group.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field subscription_group", value)
+				return fmt.Errorf("unexpected type %T for edge-field feed_group", value)
 			} else if value.Valid {
-				gr.subscription_group = new(int)
-				*gr.subscription_group = int(value.Int64)
+				gr.feed_group = new(int)
+				*gr.feed_group = int(value.Int64)
 			}
 		}
 	}

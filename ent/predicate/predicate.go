@@ -6,8 +6,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Feed is the predicate function for feed builders.
+type Feed func(*sql.Selector)
+
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
-
-// Subscription is the predicate function for subscription builders.
-type Subscription func(*sql.Selector)

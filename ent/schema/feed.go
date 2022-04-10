@@ -8,13 +8,13 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// Subscription holds the schema definition for the Subscription entity.
-type Subscription struct {
+// Feed holds the schema definition for the Feed entity.
+type Feed struct {
 	ent.Schema
 }
 
-// Fields of the Subscription.
-func (Subscription) Fields() []ent.Field {
+// Fields of the Feed.
+func (Feed) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").Default(""),
 		field.String("url").NotEmpty().Unique(),
@@ -23,8 +23,8 @@ func (Subscription) Fields() []ent.Field {
 	}
 }
 
-// Edges of the Subscription.
-func (Subscription) Edges() []ent.Edge {
+// Edges of the Feed.
+func (Feed) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("group", Group.Type),
 	}

@@ -8,6 +8,19 @@ import (
 	"polunzh/my-feed/ent"
 )
 
+// The FeedFunc type is an adapter to allow the use of ordinary
+// function as Feed mutator.
+type FeedFunc func(context.Context, *ent.FeedMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f FeedFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.FeedMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FeedMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The GroupFunc type is an adapter to allow the use of ordinary
 // function as Group mutator.
 type GroupFunc func(context.Context, *ent.GroupMutation) (ent.Value, error)
@@ -17,19 +30,6 @@ func (f GroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	mv, ok := m.(*ent.GroupMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.GroupMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The SubscriptionFunc type is an adapter to allow the use of ordinary
-// function as Subscription mutator.
-type SubscriptionFunc func(context.Context, *ent.SubscriptionMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f SubscriptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.SubscriptionMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubscriptionMutation", m)
 	}
 	return f(ctx, mv)
 }
